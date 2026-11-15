@@ -2,6 +2,7 @@
   "expo": {
     "name": "SaveAndBell",
     "slug": "SaveAndBell",
+    "owner": "surachai15032541s-team",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -22,14 +23,14 @@
     },
     "extra": {
       "eas": {
-        "projectId": "b80d97f3-1bee-406c-8d08-202926dd3c04"
+        "projectId": "469f386d-9000-4cf8-8abe-4fc2261a8396"
       }
     },
     "runtimeVersion": {
       "policy": "appVersion"
     },
     "updates": {
-      "url": "https://u.expo.dev/b80d97f3-1bee-406c-8d08-202926dd3c04"
+      "url": "https://u.expo.dev/469f386d-9000-4cf8-8abe-4fc2261a8396"
     }
   }
 }
