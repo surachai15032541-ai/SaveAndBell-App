@@ -43,9 +43,12 @@ export default function App() {
         const savedItems = await AsyncStorage.getItem('@saveandbell_items');
         const savedLogs = await AsyncStorage.getItem('@saveandbell_logs');
         const savedReminder = await AsyncStorage.getItem('@saveandbell_reminder');
+        const savedUser = await AsyncStorage.getItem('@saveandbell_current_user');
+
         if (savedItems) setItems(JSON.parse(savedItems));
         if (savedLogs) setLogs(JSON.parse(savedLogs));
         if (savedReminder) setReminder(JSON.parse(savedReminder));
+        if (savedUser) setCurrentUser(savedUser);
       } catch (e) {
         console.log('โหลดข้อมูลไม่สำเร็จ', e);
       }
@@ -59,6 +62,22 @@ export default function App() {
     AsyncStorage.setItem('@saveandbell_logs', JSON.stringify(logs));
     AsyncStorage.setItem('@saveandbell_reminder', JSON.stringify(reminder));
   }, [items, logs, reminder]);
+
+  useEffect(() => {
+    const saveCurrentUser = async () => {
+      try {
+        if (currentUser) {
+          await AsyncStorage.setItem('@saveandbell_current_user', currentUser);
+        } else {
+          await AsyncStorage.removeItem('@saveandbell_current_user');
+        }
+      } catch (e) {
+        console.log('บันทึกข้อมูลผู้ใช้งานไม่สำเร็จ', e);
+      }
+    };
+
+    saveCurrentUser();
+  }, [currentUser]);
 
   const getCurrentTime = () => {
     const now = new Date();

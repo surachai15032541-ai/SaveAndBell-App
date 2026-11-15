@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -15,16 +16,54 @@ interface AuthScreenProps {
   onLoginSuccess: (username: string) => void;
 }
 
+const DEFAULT_USERS: Record<string, string> = {
+  demo: '1234',
+};
+
 export default function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
   const [isRegister, setIsRegister] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
 
-  // จัดเก็บรายชื่อผู้ใช้ที่สมัครในเครื่อง
-  const [users, setUsers] = useState<Record<string, string>>({
-    demo: '1234',
-  });
+  const [users, setUsers] = useState<Record<string, string>>(DEFAULT_USERS);
+  const [isUsersLoaded, setIsUsersLoaded] = useState(false);
+
+  useEffect(() => {
+    const loadUsers = async () => {
+      try {
+        const savedUsers = await AsyncStorage.getItem('@saveandbell_users');
+        if (savedUsers) {
+          const parsedUsers = JSON.parse(savedUsers) as Record<string, string>;
+          setUsers({ ...DEFAULT_USERS, ...parsedUsers });
+        } else {
+          setUsers(DEFAULT_USERS);
+        }
+      } catch (e) {
+        console.log('โหลดข้อมูลสมาชิกไม่สำเร็จ', e);
+      } finally {
+        setIsUsersLoaded(true);
+      }
+    };
+
+    loadUsers();
+  }, []);
+
+  useEffect(() => {
+    if (!isUsersLoaded) {
+      return;
+    }
+
+    const saveUsers = async () => {
+      try {
+        await AsyncStorage.setItem('@saveandbell_users', JSON.stringify(users));
+      } catch (e) {
+        console.log('บันทึกข้อมูลสมาชิกไม่สำเร็จ', e);
+      }
+    };
+
+    saveUsers();
+  }, [isUsersLoaded, users]);
 
   const handleSubmit = () => {
     setErrorMsg('');
@@ -40,10 +79,16 @@ export default function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
         setErrorMsg('ชื่อผู้ใช้นี้มีในระบบแล้ว กรุณาใช้ชื่ออื่น');
         return;
       }
-      setUsers({ ...users, [cleanUser]: password });
+
+      const nextUsers = { ...users, [cleanUser]: password };
+      setUsers(nextUsers);
+      setUsername('');
+      setPassword('');
       onLoginSuccess(cleanUser);
     } else {
       if (users[cleanUser] === password) {
+        setUsername('');
+        setPassword('');
         onLoginSuccess(cleanUser);
       } else {
         setErrorMsg('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง (ทดลองใช้ demo / 1234)');
@@ -61,6 +106,7 @@ export default function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
       </View>
       <Text style={styles.title}>Save and Bell</Text>
       <Text style={styles.subtitle}>บันทึกของสำคัญ พร้อมเสียงเตือนก่อนออกจากบ้าน</Text>
+      <Text style={styles.memberCount}>สมาชิกที่ลงทะเบียนแล้ว: {Object.keys(users).length} บัญชี</Text>
 
       <View style={styles.card}>
         <Text style={styles.cardHeader}>
@@ -140,8 +186,15 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.textMuted,
     textAlign: 'center',
-    marginBottom: 28,
     marginTop: 4,
+  },
+  memberCount: {
+    fontSize: 12,
+    color: COLORS.primary,
+    textAlign: 'center',
+    marginBottom: 20,
+    marginTop: 8,
+    fontWeight: '600',
   },
   card: {
     backgroundColor: COLORS.cardBg,
